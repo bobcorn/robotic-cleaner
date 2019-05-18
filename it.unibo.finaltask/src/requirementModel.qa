@@ -1,0 +1,68 @@
+// Model after the requirement analysis
+System finalSys2018Req
+
+Dispatch usercmd		: usercmd(CMD)					// From web gui
+Dispatch sonar		: sonar(SONAR, TARGET, DISTANCE)	// From (virtual) sonar
+Dispatch sonarDetect	: sonarDetect(X)					// From (virtual) robot sonar
+
+Dispatch moveRobot	: usercmd(CMD)
+Dispatch startAppl	: startAppl(X)					// X = go | halt
+
+Dispatch ctrlMsg		: ctrlMsg(TARGET, PAYLOAD)
+Dispatch sensorMsg	: sensorMsg(ORIGIN, PAYLOAD)
+
+Context ctxReqConsole			ip [host="localhost" port=8020]
+Context ctxReqRobot				ip [host="localhost" port=8021]
+Context ctxReqSensorsActuators	ip [host="localhost" port=8022]
+
+QActor reqconsole context ctxReqConsole {
+	Plan init normal [
+		forward reqrobot -m moveRobot : usercmd( robotgui(h(X)) );
+		forward reqrobot -m moveRobot : usercmd( robotgui(w(X)) );
+		forward reqrobot -m moveRobot : usercmd( robotgui(s(X)) );
+		forward reqrobot -m moveRobot : usercmd( robotgui(a(X)) );
+		forward reqrobot -m moveRobot : usercmd( robotgui(d(X)) );
+		forward reqrobot -m startAppl : startAppl(go);
+		forward reqrobot -m startAppl : startAppl(halt)
+	]
+}
+
+QActor reqrobot context ctxReqRobot {
+	Plan init normal [
+		forward reqrobot -m moveRobot : usercmd( robotgui(h(X)) );
+		forward reqrobot -m moveRobot : usercmd( robotgui(w(X)) );
+		forward reqrobot -m moveRobot : usercmd( robotgui(s(X)) );
+		forward reqrobot -m moveRobot : usercmd( robotgui(a(X)) );
+		forward reqrobot -m moveRobot : usercmd( robotgui(d(X)) );
+		forward reqrobot -m startAppl : startAppl(halt);
+		
+		forward reqlamp -m ctrlMsg : ctrlMsg(lamp, on);
+		forward reqlamp -m ctrlMsg : ctrlMsg(lamp, off) 
+	] transition stopAfter 360000
+		whenMsg sensorMsg -> handleSensors
+	
+	Plan handleSensors [
+		onMsg sensorMsg : sensorMsg(O, P) -> println(sensorMsg(O, P))
+	]
+}
+
+QActor reqtherm context ctxReqSensorsActuators {
+	Plan init normal [
+		forward reqrobot -m sensorMsg : sensorMsg(thermometer, 23)
+	]
+}
+
+QActor reqclock context ctxReqSensorsActuators {
+	Plan init normal [
+		forward reqrobot -m sensorMsg : sensorMsg(clock, '10:05:30')
+	]
+}
+
+QActor reqlamp context ctxReqSensorsActuators {
+	Plan init normal [] transition stopAfter 3600000
+		whenMsg ctrlMsg -> handleLamp
+	
+	Plan handleLamp [
+		onMsg ctrlMsg : ctrlMsg(lamp, X) -> println(X)
+	]
+}

@@ -1,0 +1,24 @@
+/*
+*
+* A GraphViz DOT FSM description 
+* Please use a GraphViz visualizer (like http://www.webgraphviz.com)
+*  
+*/
+
+digraph finite_state_machine {
+	rankdir=LR
+	size="8,5"
+	
+	init [ color = red ][ fontcolor = red ][ penwidth = 3 ]
+	waitStart [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	doMove [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	stopClean [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	cleanPortion [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	
+	doMove -> doMove [ label = "timeout(200)" ][ color = green ][ fontcolor = green ]
+	stopClean -> cleanPortion [ label = "[ ?? cleanMore ], switch" ][ color = black ][ fontcolor = black ]
+	init -> waitStart [ label = "switch" ][ color = black ][ fontcolor = black ]
+	waitStart -> cleanPortion [ label = "switch" ][ color = black ][ fontcolor = black ]
+	doMove -> stopClean [ label = "moveFinished" ][ color = black ][ fontcolor = black ]
+	cleanPortion -> doMove [ label = "[ !? move(_,_) ], switch" ][ color = black ][ fontcolor = black ]
+}

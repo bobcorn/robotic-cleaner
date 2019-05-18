@@ -1,0 +1,2 @@
+plan(1,translate, sentence(true,eventswitch(usercmd, Â»usercmd( robotgui( X)), forward(robot, moveRobot,moveRobot( X)) ),'','' ))
+plan(2,translate, sentence(true,move(resumeplan),'','' ))

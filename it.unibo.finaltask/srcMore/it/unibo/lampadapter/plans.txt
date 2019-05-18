@@ -1,0 +1,4 @@
+plan(1,init, sentence(true,move(print("Lamp Adapter started")),'','' ))
+plan(2,init, sentence( configHue( IP,L),not here StateMoveNormal,'','' ))
+plan(1,ctrlLamp, sentence( enabled,not here StateMoveNormal,'','' ))
+plan(2,ctrlLamp, sentence(true,move(resumeplan),'','' ))

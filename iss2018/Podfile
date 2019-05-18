@@ -1,0 +1,8 @@
+# platform :osx, '10.13'
+
+target 'iss2018' do
+  use_frameworks!
+
+  # Pods for iss2018
+  pod 'CocoaMQTT'
+end

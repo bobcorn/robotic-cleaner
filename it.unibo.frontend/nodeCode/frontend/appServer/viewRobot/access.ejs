@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>ResourceAccess</title>
+		<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+		<script type="text/javascript" src="QActorWebUI.js"></script>
+		<script>
+			var socket = io.connect();
+			console.log("CONNECTED VIA SOCKET");
+			socket.on('message', function(v){ document.getElementById('display').innerHTML=v; });
+		</script>
+	</head><body>
+		<div class="container">
+			<h1>Robot Control</h1>
+			Welcome <b><%= currentUser.name() %></b>.
+			<div style="text-align: center; margin-bottom: 20px">
+				<b>Auto cleaner</b><br>
+				<form action="/robot/actions/commands/appl/go" method="post" style='display: inline-block; width: 100px'>
+					<input type="submit" value="Start" class="btn btn-primary btn-block">
+				</form>
+				<form action="/robot/actions/commands/appl/halt" method="post" style='display: inline-block; width: 100px'>
+					<input type="submit" value="Stop" class="btn btn-primary btn-block">
+				</form>
+			</div>
+			<% if(debugging) { %>
+			<div style="text-align: center">
+				<b>Manual controls</b>
+			</div>
+			<table style="margin: 0 auto;">
+				<tr>
+					<td width='100'></td>
+					<td width='100' align="center">
+						<form action="/robot/actions/commands/w" method="post">
+							<input type="submit" value="Forward" class="btn btn-primary btn-block">
+						</form>
+					</td>
+					<td width='100'></td>
+				</tr>
+				<tr>
+					<td align="center">
+						<form action="/robot/actions/commands/a" method="post">
+							<input type="submit" value="Left" class="btn btn-primary btn-block">
+						</form>
+					</td>
+					<td align="center">
+						<form action="/robot/actions/commands/h" method="post">
+							<input type="submit" value="Stop" class="btn btn-primary btn-block">
+						</form>
+					</td>
+					<td align="center">
+						<form action="/robot/actions/commands/d" method="post">
+							<input type="submit" value="Right" class="btn btn-primary btn-block">
+						</form>
+					</td>
+				</tr>
+				<tr>
+					<td align="center"> </td>
+					<td align="center">
+						<form action="/robot/actions/commands/s" method="post">
+							<input type="submit" value="Backward" class="btn btn-primary btn-block">
+						</form>
+					</td>
+					<td align="center"> </td>
+				</tr>
+			</table>
+			<% } %>
+		</div>
+		<span id="display">Display area</span>
+	</body>
+</html>

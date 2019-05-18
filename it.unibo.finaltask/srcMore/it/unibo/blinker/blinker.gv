@@ -1,0 +1,33 @@
+/*
+*
+* A GraphViz DOT FSM description 
+* Please use a GraphViz visualizer (like http://www.webgraphviz.com)
+*  
+*/
+
+digraph finite_state_machine {
+	rankdir=LR
+	size="8,5"
+	
+	init [ color = red ][ fontcolor = red ][ penwidth = 3 ]
+	blinkOn [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	blinkOff [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	checkEnd [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	checkStart [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	listen [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	blinkStop [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	
+	checkStart -> blinkOn [ label = "[ ?? shouldBlink ], switch" ][ color = black ][ fontcolor = black ]
+	blinkOn -> checkEnd [ label = "ctrlMsg" ][ color = red ][ fontcolor = red ][ dir = both ]
+	checkEnd -> blinkStop [ label = "[ ?? shouldStop ], switch" ][ color = black ][ fontcolor = black ]
+	blinkOff -> blinkOn [ label = "timeout(1000)" ][ color = green ][ fontcolor = green ]
+	listen -> handleToutBuiltIn [ label = "timeout(36000000)" ][ color = green ][ fontcolor = green ]
+	listen -> checkStart [ label = "ctrlMsg" ][ color = red ][ fontcolor = red ][ dir = both ]
+	listen -> listen [ label = "repeat "][ style = dashed ][ color = blue ][ fontcolor = blue ]
+	blinkStop -> listen [ label = "switch" ][ color = black ][ fontcolor = black ]
+	blinkOff -> checkEnd [ label = "ctrlMsg" ][ color = red ][ fontcolor = red ][ dir = both ]
+	init -> listen [ label = "switch" ][ color = black ][ fontcolor = black ]
+	blinkOn -> blinkOff [ label = "timeout(1000)" ][ color = green ][ fontcolor = green ]
+	blinkOff -> blinkOff [ label = "repeat "][ style = dashed ][ color = blue ][ fontcolor = blue ]
+	blinkOn -> blinkOn [ label = "repeat "][ style = dashed ][ color = blue ][ fontcolor = blue ]
+}

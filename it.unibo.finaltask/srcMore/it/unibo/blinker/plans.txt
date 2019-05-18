@@ -1,0 +1,8 @@
+plan(1,init, sentence(true,move(print("Blinker ready...")),'','' ))
+plan(1,checkStart, sentence(true,msgswitch(ctrlMsg, ctrlMsg( blinker,on) , addRule( shouldBlink )),'','' ))
+plan(2,checkStart, sentence(true,move(resumeplan),'','' ))
+plan(1,blinkOn, sentence(true,raise( ctrlEvent , ctrlEvent( hueLamp,on) )'),'','' ))
+plan(1,blinkOff, sentence(true,raise( ctrlEvent , ctrlEvent( hueLamp,off) )'),'','' ))
+plan(1,checkEnd, sentence(true,msgswitch(ctrlMsg, ctrlMsg( blinker,off) , addRule( shouldStop )),'','' ))
+plan(2,checkEnd, sentence(true,move(resumeplan),'','' ))
+plan(1,blinkStop, sentence(true,raise( ctrlEvent , ctrlEvent( hueLamp,off) )'),'','' ))

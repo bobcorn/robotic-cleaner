@@ -1,0 +1,413 @@
+// Model after the requirement analysis
+System finalSys2018
+
+Event usercmd		: usercmd(CMD)					// From web gui
+Event sonar			: sonar(SONAR, X, DISTANCE)		// From (virtual) sonar
+Event sonarDetect	: sonarDetect(X)					// From (virtual) robot sonar
+
+Dispatch moveRobot	: moveRobot(X)
+Dispatch ctrlAppl	: ctrlAppl(X)					// X = go | halt
+
+Event ctrlEvent		: ctrlEvent(TARGET, PAYLOAD)
+Dispatch ctrlMsg		: ctrlMsg(TARGET, PAYLOAD)
+Event sensorEvent	: sensorEvent(ORIGIN, PAYLOAD)
+Event lampEvent		: lampEvent(VERB, INFO)			// Feedback for controlling the real lamp
+
+// Interaction with the actor controlling the automatic cleaning
+Dispatch moveFinished 	: moveFinished(X)
+Dispatch startAutoClean	: startAutoClean(X)
+Dispatch stopAutoClean	: stopAutoClean(X)
+Dispatch retryAutoClean	: retryAutoClean(X)
+
+pubSubServer "tcp://localhost:1883"
+
+Context ctxFinalSysAnalysis ip [host="localhost" port=8010]
+
+QActor guitranslator context ctxFinalSysAnalysis -pubsub {
+	Plan init normal [
+		// This actor replaces the event handler to avoid a bug in the QActor system that could lead to event loss
+	]
+	transition stopAfter 36000000
+		whenEvent usercmd -> translate
+	finally repeatPlan
+	
+	Plan translate resumeLastPlan [
+		onEvent usercmd : usercmd( robotgui(X) ) -> forward robot -m moveRobot : moveRobot(X)
+	]
+}
+
+QActor webguiexecutor context ctxFinalSysAnalysis -pubsub {
+	Rules {
+		tempThreshold(25).			// 25°C
+		timeInterval(32400, 39600).	// 9:00:00 - 11:00:00
+		sonarThreshold(5).
+		
+		model(thermometer, 20).	// 20°C
+		model(clock, 36300). 	// 10:05:00
+		model(blinker, off).
+		
+		validConditions :-
+			model(thermometer, T), model(clock, H), tempThreshold(Tmax), timeInterval(Hmin, Hmax),
+			eval(le, T, Tmax), eval(ge, H, Hmin), eval(le, H, Hmax).
+			
+		inFrontOfSonar :- sonarThreshold(Dmax),
+			curSonarDistance(D), eval(le, D, Dmax).		
+ 		
+		changedModelAction(thermometer, _) :- validConditions, !. 
+		changedModelAction(thermometer, _) :- sendMsg(webguiexecutor, ctrlAppl, ctrlAppl(halt)).
+		
+		changedModelAction(clock, _) :- validConditions, !. 
+		changedModelAction(clock, _) :- sendMsg(webguiexecutor, ctrlAppl, ctrlAppl(halt)).
+					     
+		changedModelAction(blinker, V) :- sendMsg(blinker, ctrlMsg, ctrlMsg(blinker, V)).
+	}
+	
+	Plan init normal [
+		demo consult('./resourceModel.pl');
+		println("Application ready")
+	]
+	switchTo listen
+	
+	Plan listen [] transition stopAfter 36000000
+		whenMsg ctrlAppl -> startLogic,
+		whenEvent sensorEvent -> handleSensor
+	finally repeatPlan
+		
+	Plan startLogic resumeLastPlan [
+		[!? validConditions] {
+			onMsg ctrlAppl : ctrlAppl(go) -> addRule shouldStart
+		} else
+			println("Sensors conditions invalid, cannot clean")
+	]
+	switchTo [?? shouldStart] checkInitialPosition
+	
+	Plan checkInitialPosition resumeLastPlan [
+		println("Sensors conditions are valid, checking initial position...")
+	]
+	transition
+		whenTime 1000 -> listen,
+		whenEvent sonar -> checkInitialSonarDistance
+		
+	Plan checkInitialSonarDistance resumeLastPlan [
+		removeRule curSonarDistance(D);
+		onEvent sonar : sonar(sonar1, player, D) -> addRule curSonarDistance(D)
+	]
+	switchTo [!? inFrontOfSonar] startCleaning
+			
+	Plan startCleaning [
+		println("Application started...");
+		demo changeModelItem(blinker, on);
+		forward cleaner -m startAutoClean : startAutoClean(true)
+	]
+	switchTo cleaning
+	
+	Plan cleaning [] transition stopAfter 36000000
+		whenEvent sensorEvent -> handleSensor,
+		whenMsg ctrlAppl -> checkStop,
+		whenMsg stopAutoClean -> cleanStop // Clean signaled completion of operations
+	finally repeatPlan
+	
+	Plan checkStop resumeLastPlan [
+		onMsg ctrlAppl : ctrlAppl(halt) -> addRule shouldStop
+	]
+	switchTo [?? shouldStop] cleanStop
+	
+	Plan cleanStop [
+		demo changeModelItem(blinker, off);
+		forward cleaner -m stopAutoClean : stopAutoClean(true);
+		forward robot -m moveRobot : moveRobot(h);
+		println("Application stopped.")
+	]
+	switchTo listen
+	
+	Plan handleSensor resumeLastPlan [
+		// O = thermometer	=> P = real number representing the current temperature
+		// O = clock 		=> P = positive integer representing the number of seconds from midnight (00:00:00 = 0, 23:59:59 = 86399, 10:05:06 = 10*3600 + 5*60 + 6)
+		onEvent sensorEvent : sensorEvent(O, P) -> demo changeModelItem(O, P)
+	]
+	switchTo [not !? validConditions] cleanStop
+}
+
+QActor cleaner context ctxFinalSysAnalysis {
+	Rules {
+		defaultPosition(pos(cell(0,0), n)).
+		size(8,8).
+//		tileSize(1000).
+		tileSize(200).
+		
+		useMap.
+	}
+	
+	Plan init normal [
+		demo consult('./astar.pl')
+	]
+	switchTo waitStart
+	
+	Plan cleanKBStatus [
+		[?? status(cell(X,Y), S)]
+			javaRun it.unibo.utils.misc.noOp()
+		else {
+			addRule doneCleaningKB;
+			println("Cleaned KB (1/4)")
+		}
+	]
+	switchTo [?? doneCleaningKB] cleanKBMoves
+	finally repeatPlan
+	
+	Plan cleanKBMoves [
+		[?? move(A, pos(cell(X,Y),D))]
+			javaRun it.unibo.utils.misc.noOp()
+		else {
+			addRule doneCleaningKB;
+			println("Cleaned KB (2/4)")
+		}
+	]
+	switchTo [?? doneCleaningKB] cleanKBNextPositions
+	finally repeatPlan
+	
+	Plan cleanKBNextPositions [
+		[?? nextPos(pos(cell(X,Y), D))]
+			javaRun it.unibo.utils.misc.noOp()
+		else {
+			addRule doneCleaningKB;
+			println("Cleaned KB (3/4)")
+		}
+	]
+	switchTo [?? doneCleaningKB] cleanKBMisc
+	finally repeatPlan
+	
+	Plan cleanKBMisc [
+		removeRule overrideCleanStatus;
+		removeRule ignoreSonar;
+		
+		println("Cleaned KB (4/4)")
+	]
+	switchTo waitStart
+	
+	Plan waitStart [
+		[!? useMap] {
+			println("Loading saved map...");
+			demo consult('./map.pl');
+			[!? status(cell(_,_),_)] {
+				println("Loaded saved map")
+			} else {
+				println("No saved map, loaded empty map");
+				demo loadStatus
+			}
+		} else {
+			println("Loaded empty map");
+			demo loadStatus
+		};
+		demo loadInitialPosition;
+		demo visitCurrent;
+		
+		println("Auto cleaner ready to start...")
+	]
+	transition stopAfter 36000000
+		whenMsg startAutoClean -> cleanPortion
+	
+	Plan cleanPortion [
+		[!? findMove(L)]
+			demo registerMoves(L)
+		else { // Cannot reach any goal
+			[!? fullyExplored] {
+				// Room if fully cleaned (with possibly some off-limits parts not cleaned) but the end point is not reachable
+				println("Cannot reach the goal due to obstacles");
+				selfMsg stopAutoClean : stopAutoClean(true);
+				forward webguiexecutor -m stopAutoClean : stopAutoClean(true)
+			} else {
+				[!? status(cell(_, _), t)] {
+					// What can be done with the first round of obstacle detection is done
+					// Mark all detected obstacles as possible obstacles to allow re-check
+					println("Re-checking detected obstacle to see if they've gone away");
+					selfMsg moveFinished : moveFinished(rechecks) 
+				} else {
+					// Some parts of the room are unreachable due to obstacle and not cleanable
+					// Ignore them and go to the end point
+					println("Ignoring some parts of the room due to obstacles, going to the end point");
+					addRule overrideCleanStatus;
+					selfMsg retryAutoClean : retryAutoClean(true)
+				}
+			}
+		};
+		
+		[!? move(_, _)] selfMsg startAutoClean : startAutoClean(true);
+		println("---------------------")
+	]
+	transition
+		whenTime 1 -> stopClean, // Triggered when findMove is successful but no move are planned, i.e. already on the goal cell
+		whenMsg stopAutoClean -> cleanKBStatus,
+		whenMsg retryAutoClean -> cleanPortion,
+		whenMsg startAutoClean -> doMove,
+		whenMsg moveFinished -> recheckObstacles
+	
+	Plan doMove [
+		removeRule ignoreSonar;
+		demo actualizeNext;
+		demo printStatus;
+		
+		javaRun it.unibo.cleaner.cleanerTimer.startTimer();
+		[!? move(A, _)]
+			forward robot -m moveRobot : moveRobot(A)
+		else
+			selfMsg moveFinished : moveFinished(true);
+		[!? executingRotation] addRule ignoreSonar;
+		[?? move(_, T)] demo registerNext(T);
+		
+		println("---------------------")
+	] transition
+//		whenTime 1300 -> doMove,
+		whenTime 201 -> doMove,
+		whenMsg stopAutoClean -> cleanKBStatus,
+		whenMsg moveFinished -> stopClean,
+		whenEvent sonarDetect -> registerObstacle
+		
+	Plan registerObstacle [
+		[?? ignoreSonar]
+			selfMsg moveFinished : moveFinished(waiting)
+		else {
+			javaRun it.unibo.cleaner.cleanerTimer.stopTimer();
+			println("Frontal obstacle detected, stepping back...");
+			demo nextIsObstacle;
+			demo printStatus;
+			[?? timeMoved(T)] forward robot -m moveRobot : moveRobot(s(T));
+			
+			println("---------------------")
+		}
+	] 
+	transition
+//		whenTime 1300 -> abortPlannedMoves,
+		whenTime 201 -> abortPlannedMoves,
+		whenMsg stopAutoClean -> cleanKBStatus,
+		whenMsg moveFinished -> waitMoveCompletion
+	
+	Plan waitMoveCompletion [] transition
+//		whenTime 1300 -> doMove,
+		whenTime 201 -> doMove,
+		whenMsg stopAutoClean -> cleanKBStatus
+		
+	Plan recheckObstacles [
+		demo recheck(cell(X,Y));
+		
+		[not !? status(cell(_,_), t)] addRule recheckObstacles
+	]
+	switchTo [?? recheckObstacles] cleanPortion
+	finally repeatPlan
+	
+	Plan abortPlannedMoves [
+		[?? move(A, pos(cell(X,Y),D))]
+			javaRun it.unibo.utils.misc.noOp()
+		else {
+			addRule doneCleaningKB;
+			println("Cleaned planned moves")
+		}
+	]
+	switchTo [?? doneCleaningKB] stopClean
+	finally repeatPlan
+		
+	Plan stopClean [
+		removeRule ignoreSonar;
+		demo actualizeNext;
+		
+		[!? jobDone] {
+			println("Room is now clean!");
+			javaRun it.unibo.cleaner.mapper.saveMap();
+			
+			selfMsg stopAutoClean : stopAutoClean(true);
+			forward webguiexecutor -m stopAutoClean : stopAutoClean(true)
+		} else {
+			println("Cleaned a portion of the room!");
+			selfMsg moveFinished : moveFinished(true)
+		}
+	]
+	transition stopAfter 36000000
+		whenMsg stopAutoClean -> cleanKBStatus,
+		whenMsg moveFinished -> cleanPortion
+}
+
+QActor blinker context ctxFinalSysAnalysis -pubsub {
+	Plan init normal [
+		println("Blinker ready...")
+	]
+	switchTo listen
+	
+	Plan listen [] transition stopAfter 36000000
+		whenMsg ctrlMsg -> checkStart
+	finally repeatPlan	
+	
+	Plan checkStart resumeLastPlan [
+		onMsg ctrlMsg : ctrlMsg(blinker, on) -> addRule shouldBlink
+	]
+	switchTo [?? shouldBlink] blinkOn
+	
+	Plan blinkOn [
+		emit ctrlEvent : ctrlEvent(hueLamp, on)
+	] transition
+		whenTime 1000 -> blinkOff,
+		whenMsg ctrlMsg -> checkEnd
+	finally repeatPlan
+		
+	Plan blinkOff [
+		emit ctrlEvent : ctrlEvent(hueLamp, off)
+	] transition
+		whenTime 1000 -> blinkOn,
+		whenMsg ctrlMsg -> checkEnd
+	finally repeatPlan
+		
+	Plan checkEnd resumeLastPlan [
+		onMsg ctrlMsg : ctrlMsg(blinker, off) -> addRule shouldStop
+	]
+	switchTo [?? shouldStop] blinkStop
+	
+	Plan blinkStop [
+		emit ctrlEvent : ctrlEvent(hueLamp, off)
+	]
+	switchTo listen
+}
+
+QActor robot context ctxFinalSysAnalysis {
+	Plan init normal [
+		println("Robot started");
+		javaRun it.unibo.robot.mbotConnTcp.initClientConn()
+	]
+	switchTo listen
+	
+	Plan listen [] transition stopAfter 36000000
+		whenMsg moveRobot -> execMove
+	finally repeatPlan
+		
+	Plan execMove resumeLastPlan [
+		onMsg moveRobot : moveRobot(h)		-> javaRun it.unibo.robot.mbotConnTcp.mbotStop();
+		onMsg moveRobot : moveRobot(w(X))	-> javaRun it.unibo.robot.mbotConnTcp.mbotForward(X);
+		onMsg moveRobot : moveRobot(s(X))	-> javaRun it.unibo.robot.mbotConnTcp.mbotBackward(X);
+		onMsg moveRobot : moveRobot(a)		-> javaRun it.unibo.robot.mbotConnTcp.mbotLeft();
+		onMsg moveRobot : moveRobot(d)		-> javaRun it.unibo.robot.mbotConnTcp.mbotRight();
+		onMsg moveRobot : moveRobot(x(X))	-> forward webguiexecutor -m ctrlAppl : ctrlAppl(X)
+	]
+}
+
+QActor lampadapter context ctxFinalSysAnalysis -pubsub {
+	Rules {
+		enabled.
+		configHue("192.168.1.2", 3).
+	}
+	
+	Plan init normal [
+		println("Lamp Adapter started");
+		[!? configHue(IP, L)] javaRun it.unibo.lampadapter.hueClient.setQaCtx("lampEvent", IP, L)
+	]
+	switchTo listen
+	
+	Plan listen [] transition stopAfter 36000000
+		whenEvent ctrlEvent -> ctrlLamp
+	finally repeatPlan
+	
+	Plan ctrlLamp resumeLastPlan [
+		[!? enabled] {
+			onEvent ctrlEvent : ctrlEvent(hueLamp,off)
+				-> javaRun it.unibo.lampadapter.hueClient.setOff();
+			onEvent ctrlEvent : ctrlEvent(hueLamp,on)
+				-> javaRun it.unibo.lampadapter.hueClient.setOn()
+		}
+	]
+}

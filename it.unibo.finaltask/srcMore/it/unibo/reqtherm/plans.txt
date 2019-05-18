@@ -1,0 +1,1 @@
+plan(1,init, sentence(true,forward(reqrobot, sensorMsg,sensorMsg( thermometer,23)),'','' ))

@@ -1,0 +1,158 @@
+%!TEX TS-program = xelatex
+%!TEX encoding = UTF-8 Unicode
+\documentclass[a4paper, 11pt, english, headings=standardclasses]{scrartcl}
+\usepackage{xifthen}
+
+\usepackage[no-math]{fontspec}
+\usepackage{titlesec}
+\usepackage{titling}
+
+\usepackage{tocstyle}
+\usetocstyle{standard}
+\makeatletter
+\renewcommand{\autodot}{}% Remove all end-of-counter dots
+\makeatother
+
+\usepackage[italian]{babel}
+\usepackage[top=2.25cm, bottom=1cm, includefoot, left=1.5cm, right=1.5cm, footskip=1cm]{geometry}
+\usepackage[hidelinks]{hyperref}
+
+\usepackage{enumitem}
+\usepackage[bottom]{footmisc}
+\usepackage{float}
+\usepackage{subfig}
+\usepackage{wrapfig}
+\usepackage[font=small,labelfont={bf,small}]{caption}
+\setcapindent{0em}
+\usepackage[binary-units = true]{siunitx}
+
+\usepackage{color}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsbsy}
+\usepackage{mathtools}
+\usepackage{esint}
+\usepackage[makeroom]{cancel}
+
+\usepackage{eurosym}
+
+\usepackage{makecell}
+\usepackage[math]{cellspace}
+\usepackage{multirow}
+\usepackage{booktabs}
+
+\usepackage{listings}
+
+% Hypenation fix for XeLaTeX
+\lccode"2019="0027
+% General appearance
+\makeatletter
+\newcommand*{\maketoc}{\@starttoc{toc}}
+\makeatother
+\newcommand{\maketitletoc}{
+%	\pagenumbering{roman}
+	{
+		\centering
+		{\Huge\bfseries\thetitle\par}
+
+		\vspace{.7cm}
+		
+		\theauthor\\[1ex]
+		\thedate\par
+		
+		\vspace{.5cm}
+	}
+%	\maketoc
+%	\newpage
+%	\pagenumbering{arabic}
+}
+
+\defaultfontfeatures{Scale=MatchLowercase}
+
+\newcommand{\blankpage}{\newpage\null\thispagestyle{empty}\newpage}
+\newcommand\cleartorightpage{\newpage
+  \ifodd\value{page}\else\null\thispagestyle{empty}\newpage\fi}
+
+\setcounter{secnumdepth}{5}
+
+\newcommand{\listspace}{-0.2em}
+\setitemize{itemsep=\listspace}
+\setenumerate{itemsep=\listspace}
+\setlist[enumerate, 2]{label=\alph*.}
+
+\sisetup{group-minimum-digits = 3}
+\sisetup{exponent-product = \cdot, output-product = \cdot}
+
+%Math & Symbols
+%-Usage \mathcolor{ color }{ equation }
+\newcommand*{\mathcolor}{}
+\def\mathcolor#1#{\mathcoloraux{#1}}
+\newcommand*{\mathcoloraux}[3]{
+  \protect\leavevmode
+  \begingroup
+    \color#1{#2}#3
+  \endgroup
+}
+\definecolor{darkgreen}{rgb}{0,0.4,0}
+
+%Fix for siunitx - fontspec conflict
+\sisetup{math-degree={^\circ}}
+\sisetup{math-micro={\fontfamily{cmr}\selectfont \text{µ}}}
+\sisetup{range-phrase=\div,range-units=single}
+
+\newcommand{\€}{\text{\euro}}
+
+\renewcommand*{\Re}[1]{\operatorname{\mathfrak{Re}}\left\{ #1 \right\}}
+\renewcommand*{\Im}[1]{\mathfrak{Im}\left\{ #1 \right\}}
+
+\newcommand*{\bigO}[1]{\mathcal{O}\left( #1 \right)}
+\newcommand*{\smallO}[1]{\mathcal{o}\left( #1 \right)}
+
+%Referencing, exercizes, examples and questions
+\renewcommand{\eqref}[1]{Equazione~\ref{#1}}
+\newcommand{\figref}[1]{\figurename~\ref{#1}}
+\newcommand{\tbref}[1]{Tabella~\ref{#1}}
+\newcommand{\prtref}[1]{§~\ref{#1}}
+
+\lstdefinestyle{premiumstyle}{
+    basicstyle={\footnotesize \ttfamily},
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+	xleftmargin=.1\textwidth,
+	xrightmargin=.1\textwidth,
+	numbers=left,
+	numbersep=10pt,
+	numberstyle=\color{gray}\ttfamily,
+	frame=l,
+	rulecolor=\color{gray},
+	framesep=5pt,
+}
+\lstset{style=premiumstyle}
+
+% Tables
+\setlength{\cmidrulewidth}{\lightrulewidth}
+\cellspacetoplimit 3pt
+\cellspacebottomlimit 2pt
+\newcommand{\verticalCell}[1]{\begin{tabular}{@{}c@{}}\rotatebox[origin=c]{90}{#1}\end{tabular}}
+
+%Units
+\DeclareSIUnit\var{VAr}
+\DeclareSIUnit\va{VA}
+\DeclareSIUnit\bps{bps}
+\DeclareSIUnit\day{gg}
+\DeclareSIUnit\amperespire{Asp}
+\DeclareSIUnit\ohm{\Omega}
+\DeclareSIUnit\decade{dec}
+\DeclareSIUnit\year{y}
+\DeclareSIUnit\month{m}
+
+\AtBeginEnvironment{quote}{\itshape}

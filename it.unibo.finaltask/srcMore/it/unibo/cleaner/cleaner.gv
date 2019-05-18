@@ -1,0 +1,57 @@
+/*
+*
+* A GraphViz DOT FSM description 
+* Please use a GraphViz visualizer (like http://www.webgraphviz.com)
+*  
+*/
+
+digraph finite_state_machine {
+	rankdir=LR
+	size="8,5"
+	
+	init [ color = red ][ fontcolor = red ][ penwidth = 3 ]
+	cleanKBNextPositions [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	cleanKBMisc [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	waitStart [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	cleanKBMoves [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	doMove [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	cleanKBStatus [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	recheckObstacles [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	stopClean [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	waitMoveCompletion [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	cleanPortion [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	registerObstacle [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	abortPlannedMoves [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	
+	cleanPortion -> doMove [ label = "startAutoClean" ][ color = black ][ fontcolor = black ]
+	doMove -> doMove [ label = "timeout(201)" ][ color = green ][ fontcolor = green ]
+	cleanKBNextPositions -> cleanKBMisc [ label = "[ ?? doneCleaningKB ], switch" ][ color = black ][ fontcolor = black ]
+	doMove -> registerObstacle [ label = "sonarDetect" ][ color = black ][ fontcolor = black ]
+	init -> waitStart [ label = "switch" ][ color = black ][ fontcolor = black ]
+	waitMoveCompletion -> cleanKBStatus [ label = "stopAutoClean" ][ color = black ][ fontcolor = black ]
+	abortPlannedMoves -> abortPlannedMoves [ label = "repeat "][ style = dashed ][ color = blue ][ fontcolor = blue ]
+	recheckObstacles -> recheckObstacles [ label = "repeat "][ style = dashed ][ color = blue ][ fontcolor = blue ]
+	recheckObstacles -> cleanPortion [ label = "[ ?? recheckObstacles ], switch" ][ color = black ][ fontcolor = black ]
+	cleanKBNextPositions -> cleanKBNextPositions [ label = "repeat "][ style = dashed ][ color = blue ][ fontcolor = blue ]
+	waitStart -> cleanPortion [ label = "startAutoClean" ][ color = black ][ fontcolor = black ]
+	doMove -> cleanKBStatus [ label = "stopAutoClean" ][ color = black ][ fontcolor = black ]
+	registerObstacle -> cleanKBStatus [ label = "stopAutoClean" ][ color = black ][ fontcolor = black ]
+	abortPlannedMoves -> stopClean [ label = "[ ?? doneCleaningKB ], switch" ][ color = black ][ fontcolor = black ]
+	waitStart -> handleToutBuiltIn [ label = "timeout(36000000)" ][ color = green ][ fontcolor = green ]
+	cleanKBMoves -> cleanKBMoves [ label = "repeat "][ style = dashed ][ color = blue ][ fontcolor = blue ]
+	cleanKBStatus -> cleanKBMoves [ label = "[ ?? doneCleaningKB ], switch" ][ color = black ][ fontcolor = black ]
+	cleanPortion -> stopClean [ label = "timeout(1)" ][ color = green ][ fontcolor = green ]
+	cleanKBMisc -> waitStart [ label = "switch" ][ color = black ][ fontcolor = black ]
+	stopClean -> cleanPortion [ label = "moveFinished" ][ color = black ][ fontcolor = black ]
+	registerObstacle -> waitMoveCompletion [ label = "moveFinished" ][ color = black ][ fontcolor = black ]
+	cleanKBMoves -> cleanKBNextPositions [ label = "[ ?? doneCleaningKB ], switch" ][ color = black ][ fontcolor = black ]
+	stopClean -> handleToutBuiltIn [ label = "timeout(36000000)" ][ color = green ][ fontcolor = green ]
+	cleanPortion -> recheckObstacles [ label = "moveFinished" ][ color = black ][ fontcolor = black ]
+	waitMoveCompletion -> doMove [ label = "timeout(201)" ][ color = green ][ fontcolor = green ]
+	registerObstacle -> abortPlannedMoves [ label = "timeout(201)" ][ color = green ][ fontcolor = green ]
+	cleanPortion -> cleanKBStatus [ label = "stopAutoClean" ][ color = black ][ fontcolor = black ]
+	stopClean -> cleanKBStatus [ label = "stopAutoClean" ][ color = black ][ fontcolor = black ]
+	cleanPortion -> cleanPortion [ label = "retryAutoClean" ][ color = black ][ fontcolor = black ]
+	doMove -> stopClean [ label = "moveFinished" ][ color = black ][ fontcolor = black ]
+	cleanKBStatus -> cleanKBStatus [ label = "repeat "][ style = dashed ][ color = blue ][ fontcolor = blue ]
+}

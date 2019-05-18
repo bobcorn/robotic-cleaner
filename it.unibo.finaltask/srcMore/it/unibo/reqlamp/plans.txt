@@ -1,0 +1,1 @@
+plan(1,handleLamp, sentence(true,msgswitch(ctrlMsg, ctrlMsg( lamp,X) , move(print(X))),'','' ))

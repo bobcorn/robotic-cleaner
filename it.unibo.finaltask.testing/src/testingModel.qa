@@ -1,0 +1,197 @@
+// Model after the requirement analysis
+System finalSys2018testing
+
+Event sonarDetect		: sonarDetect(X)	// From (virtual) robot sonar
+
+Dispatch moveFinished 	: moveFinished(X)
+Dispatch startAutoClean	: startAutoClean(X)
+Dispatch stopAutoClean	: stopAutoClean(X)
+Dispatch retryAutoClean	: retryAutoClean(X)
+
+Dispatch nextStep 		: nextStep(X)
+
+Context ctxFinalSysTesting ip [host="localhost" port=8011]
+
+QActor cleaner context ctxFinalSysTesting {
+	Rules {
+		defaultPosition(pos(cell(0,0), n)).
+		size(8,8).
+		tileSize(200).
+	}
+	
+	Plan init normal [
+		demo consult('./astar.pl')
+	]
+	switchTo waitStart
+	
+	Plan waitCleanKB [
+		addRule cleanStop
+	] transition stopAfter 36000000
+		whenMsg nextStep -> cleanKBStatus
+	
+	Plan cleanKBStatus [
+		[?? status(cell(X,Y), S)]
+			javaRun it.unibo.utils.misc.noOp()
+		else {
+			addRule doneCleaningKB;
+			println("Cleaned KB (1/4)")
+		}
+	]
+	switchTo [?? doneCleaningKB] cleanKBMoves
+	finally repeatPlan
+	
+	Plan cleanKBMoves [
+		[?? move(A, pos(cell(X,Y),D))]
+			javaRun it.unibo.utils.misc.noOp()
+		else {
+			addRule doneCleaningKB;
+			println("Cleaned KB (2/4)")
+		}
+	]
+	switchTo [?? doneCleaningKB] cleanKBNextPositions
+	finally repeatPlan
+	
+	Plan cleanKBNextPositions [
+		[?? nextPos(pos(cell(X,Y), D))]
+			javaRun it.unibo.utils.misc.noOp()
+		else {
+			addRule doneCleaningKB;
+			println("Cleaned KB (3/4)")
+		}
+	]
+	switchTo [?? doneCleaningKB] cleanKBMisc
+	finally repeatPlan
+	
+	Plan cleanKBMisc [
+		removeRule overrideCleanStatus;
+		removeRule ignoreSonar;
+		removeRule cleanStop;
+		
+		println("Cleaned KB (4/4)")
+	]
+	switchTo waitStart
+	
+	Plan waitStart [
+		demo loadStatus;
+		demo loadInitialPosition;
+		demo visitCurrent;
+		
+		println("Auto cleaner ready to start...")
+	]
+	transition stopAfter 36000000
+		whenMsg startAutoClean -> cleanPortion
+	
+	Plan cleanPortion [
+		[!? findMove(L)]
+			demo registerMoves(L)
+		else { // Cannot reach any goal
+			[!? fullyExplored] {
+				// Room if fully cleaned (with possibly some off-limits parts not cleaned) but the end point is not reachable
+				println("Cannot reach the goal due to obstacles");
+				selfMsg stopAutoClean : stopAutoClean(true)
+			} else {
+				[!? status(cell(_, _), t)] {
+					// What can be done with the first round of obstacle detection is done
+					// Mark all detected obstacles as possible obstacles to allow re-check
+					println("Re-checking detected obstacle to see if they've gone away");
+					selfMsg moveFinished : moveFinished(rechecks) 
+				} else {
+					// Some parts of the room are unreachable due to obstacle and not cleanable
+					// Ignore them and go to the end point
+					println("Ignoring some parts of the room due to obstacles, going to the end point");
+					addRule overrideCleanStatus;
+					selfMsg retryAutoClean : retryAutoClean(true)
+				}
+			}
+		};
+		
+		[!? move(_, _)] selfMsg startAutoClean : startAutoClean(true);
+		println("---------------------")
+	]
+	transition
+		whenTime 1 -> stopClean, // Triggered when findMove is successful but no move are planned, i.e. already on the goal cell
+		whenMsg stopAutoClean -> waitCleanKB,
+		whenMsg retryAutoClean -> cleanPortion,
+		whenMsg startAutoClean -> waitMove,
+		whenMsg moveFinished -> recheckObstacles
+		
+	Plan waitMove [
+		removeRule ignoreSonar;
+		demo actualizeNext
+	] transition stopAfter 36000000
+		whenMsg nextStep -> doMove,
+		whenMsg stopAutoClean -> waitCleanKB
+	
+	Plan doMove [
+		demo printStatus;
+		
+		javaRun it.unibo.cleaner.cleanerTimer.startTimer();
+		[!? move(A, _)]
+			println(moveRobot(A))
+		else
+			selfMsg moveFinished : moveFinished(true);
+		[!? executingRotation] addRule ignoreSonar;
+		[?? move(_, T)] demo registerNext(T);
+		
+		println("---------------------")
+	] transition
+		whenTime 201 -> waitMove,
+		whenMsg stopAutoClean -> waitCleanKB,
+		whenMsg moveFinished -> stopClean,
+		whenEvent sonarDetect -> registerObstacle
+		
+	Plan registerObstacle [
+		[?? ignoreSonar]
+			selfMsg moveFinished : moveFinished(waiting)
+		else {
+			javaRun it.unibo.cleaner.cleanerTimer.stopTimer();
+			println("Frontal obstacle detected, stepping back...");
+			demo nextIsObstacle;
+			demo printStatus;
+			[?? timeMoved(T)] println(moveRobot(s(T)));
+			
+			println("---------------------")
+		}
+	] 
+	transition
+		whenTime 201 -> abortPlannedMoves,
+		whenMsg stopAutoClean -> waitCleanKB,
+		whenMsg moveFinished -> waitMoveCompletion
+	
+	Plan waitMoveCompletion [] transition
+		whenTime 201 -> waitMove,
+		whenMsg stopAutoClean -> waitCleanKB
+		
+	Plan recheckObstacles [
+		demo recheck(cell(X,Y));
+		
+		[not !? status(cell(_,_), t)] addRule recheckObstacles
+	]
+	switchTo [?? recheckObstacles] cleanPortion
+	finally repeatPlan
+	
+	Plan abortPlannedMoves [
+		[?? move(A, pos(cell(X,Y),D))]
+			javaRun it.unibo.utils.misc.noOp()
+		else {
+			addRule doneCleaningKB;
+			println("Cleaned planned moves")
+		}
+	]
+	switchTo [?? doneCleaningKB] stopClean
+	finally repeatPlan
+		
+	Plan stopClean [
+		[!? jobDone] {
+			println("Room is now clean!");
+			
+			selfMsg stopAutoClean : stopAutoClean(true)
+		} else {
+			println("Cleaned a portion of the room!");
+			selfMsg moveFinished : moveFinished(true)
+		}
+	]
+	transition stopAfter 36000000
+		whenMsg stopAutoClean -> waitCleanKB,
+		whenMsg moveFinished -> cleanPortion
+}
