@@ -1,7 +1,7 @@
-# Robot Cleaner – Ingegneria dei Sistemi Software M
+# Robot Cleaner
 
 
-Final project for course "Software Systems Engineering M" during my bachelor degree at University of Bologna, carried out with colleagues Matteo Galletti and Simone Anzivino.
+Final task for course "Software Systems Engineering M" during my bachelor degree at University of Bologna, carried out together with my colleague Marco Boschi.
 
 (A.Y. 2017-2018)
 
