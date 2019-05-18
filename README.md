@@ -1,7 +1,7 @@
 # Robot Cleaner
 
 
-Final task for course "Software Systems Engineering M" during my master degree at University of Bologna, carried out together with my colleague Marco Boschi.
+Final task for course "Software Systems Engineering M" during my master's degree at University of Bologna, carried out together with my colleague Marco Boschi.
 
 (A.Y. 2017-2018)
 
