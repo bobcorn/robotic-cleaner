@@ -13,7 +13,7 @@ brew install mosquitto
 brew install mongodb
 ```
 
-Create an Eclipse workspace in the root of this repository and import the projects `it.unibo.finaltask` and `it.unibo.frontend`. Open a terminal in the `it.unibo.finaltask` folder and execute:
+Create an Eclipse workspace inside the root of this repository and import the projects `it.unibo.finaltask` and `it.unibo.frontend`. Open a terminal inside the `it.unibo.finaltask` folder and execute:
 
 ```bash
 gradle -b build_ctxFinalSysAnalysis.gradle eclipse
@@ -28,16 +28,16 @@ alias mosquitto='/usr/local/opt/mosquitto/sbin/mosquitto -c /usr/local/etc/mosqu
 alias mongodb='mongod --dbpath "/my/custom/path/to/mongodb"'
 ```
 
-For the second one, make sure to create a folder in the given path.
+For the second one, make sure to create a folder at the given path.
 
-Install all packages required by Node.js in the folders `it.unibo.frontend/nodeCode/frontend`, `VirtualRobotJS/WebGLScene` and `VirtualRobotJS/server` by using, in each of these, the following command:
+Install all packages required by Node.js inside folders `it.unibo.frontend/nodeCode/frontend`, `VirtualRobotJS/WebGLScene` and `VirtualRobotJS/server` by using, in each of these, the following command:
 
 ```bash
 npm install
 ```
 
 ### Xcode configuration
-Frameworks required to work with MQTT are available via CocoaPods, after install CocoaPods itself, download them by executing in the `iss2018` folder the following command:
+Frameworks required to work with MQTT are available via CocoaPods, after install CocoaPods itself, download them by executing inside `iss2018` folder the following command:
 
 ```bash
 pod install
@@ -54,7 +54,7 @@ Testing is limited to a single part of the project. See [`it.unibo.finaltask.tes
 	- MongoDB with the alias `mongodb`
 	- The frontend server with `startFrontEnd.sh`
 2. Start hardware mocks with `ISS 2018 – Mock.app`
-3. Start the QActor application by launching the class `it.unibo.ctxfinalSysAnalysis` in `src-gen` in the `it.unibo.finaltask` project
+3. Start the QActor application by launching the class `it.unibo.ctxfinalSysAnalysis` in `src-gen` inside `it.unibo.finaltask` project
 
 It is now possible to view the virtual robot at http://localhost:8081 and the frontend at http://localhost:3000. By reloading the virtual robot page, the initial scene will be reset (file `VirtualRobotJS/WebGLScene/sceneConfig.js`). If the application was **not** in the auto-cleaning phase when the scene has been reloaded, the QActors have automatically reconfigured themselves the restart at the sending of a new *Start* command.
 
