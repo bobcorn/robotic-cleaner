@@ -21,7 +21,7 @@ gradle -b build_ctxFinalSysAnalysis.gradle eclipse
 
 More than one execution of this command may be necessary, in that case open the _Build Path_ configuration and make sure no folders are duplicated. Open the _Build Path_ configuration of `it.unibo.frontend` and delete all folders from the _Source_ tab. At this point Eclipse should not display any error (some warnings only).
 
-To easily start the many servers, create aliases by appending these lines to the the `~/.bash_profile` file:
+To easily start the many servers, create aliases by appending these lines to the `~/.bash_profile` file:
 
 ```bash
 alias mosquitto='/usr/local/opt/mosquitto/sbin/mosquitto -c /usr/local/etc/mosquitto/mosquitto.conf'
@@ -56,7 +56,7 @@ Testing is limited to a single part of the project. See [`it.unibo.finaltask.tes
 2. Start hardware mocks with `ISS 2018 – Mock.app`
 3. Start the QActor application by launching the class `it.unibo.ctxfinalSysAnalysis` in `src-gen` in the `it.unibo.finaltask` project
 
-It is now possible to view the virtual robot at http://localhost:8081 and the frontend at http://localhost:3000. By reloading the virtual robot page, the initial scene will be reset (file `VirtualRobotJS/WebGLScene/sceneConfig.js`). If the application was **not** in the auto-cleaning phase when the the scene has been reloaded, the QActors have automatically reconfigured themselves the restart at the sending of a new *Start* command.
+It is now possible to view the virtual robot at http://localhost:8081 and the frontend at http://localhost:3000. By reloading the virtual robot page, the initial scene will be reset (file `VirtualRobotJS/WebGLScene/sceneConfig.js`). If the application was **not** in the auto-cleaning phase when the scene has been reloaded, the QActors have automatically reconfigured themselves the restart at the sending of a new *Start* command.
 
 ## Commit
 
