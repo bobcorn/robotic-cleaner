@@ -44,12 +44,12 @@ pod install
 ```
 
 ### Test
-Testing is limited to a single part of the project, see [`it.unibo.finaltask.testing`](https://github.com/bobcorn/robot-cleaner/tree/master/it.unibo.finaltask.testing) for setup details.
+Testing is limited to a single part of the project. See [`it.unibo.finaltask.testing`](https://github.com/bobcorn/robot-cleaner/tree/master/it.unibo.finaltask.testing) for setup details.
 
 ## System Startup
 
 1. Start (in any order)
-	- Mosquitto with the alis `mosquitto`
+	- Mosquitto with the alias `mosquitto`
 	- The virtual robot with `startRobot.sh`
 	- MongoDB with the alias `mongodb`
 	- The frontend server with `startFrontEnd.sh`
