@@ -6,14 +6,14 @@ A.I. logic for a smart robot cleaner. Final task for course "Software Systems En
 
 ## Initial Setup (macOS)
 
-Install the two [QActor plug-ins](https://github.com/anatali/iss2018/tree/master/it.unibo.issMaterial/plugins) for Eclipse provided by the professor, Gradle and Node.js, then install MongoDB and Mosquitto via HomeBrew by using
+Install the two [QActor plug-ins](https://github.com/anatali/iss2018/tree/master/it.unibo.issMaterial/plugins) for Eclipse provided by the professor, Gradle and Node.js, then install MongoDB and Mosquitto via HomeBrew by using:
 
 ```bash
 brew install mosquitto
 brew install mongodb
 ```
 
-Create an Eclipse workspace in the root of this repository and import the projects `it.unibo.finaltask` and `it.unibo.frontend`. Open a terminal in the `it.unibo.finaltask` folder and execute
+Create an Eclipse workspace in the root of this repository and import the projects `it.unibo.finaltask` and `it.unibo.frontend`. Open a terminal in the `it.unibo.finaltask` folder and execute:
 
 ```bash
 gradle -b build_ctxFinalSysAnalysis.gradle eclipse
@@ -21,23 +21,23 @@ gradle -b build_ctxFinalSysAnalysis.gradle eclipse
 
 More than one execution of this command may be necessary, in that case open the _Build Path_ configuration and make sure no folders are duplicated. Open the _Build Path_ configuration of `it.unibo.frontend` and delete all folders from the _Source_ tab. At this point Eclipse should not display any error (some warnings only).
 
-To easily start the many servers, create aliases by appending these lines to the the `~/.bash_profile` file
+To easily start the many servers, create aliases by appending these lines to the the `~/.bash_profile` file:
 
-```bahs
+```bash
 alias mosquitto='/usr/local/opt/mosquitto/sbin/mosquitto -c /usr/local/etc/mosquitto/mosquitto.conf'
 alias mongodb='mongod --dbpath "/my/custom/path/to/mongodb"'
 ```
 
 For the second one, make sure to create a folder in the given path.
 
-Install all packages required by Node.js in the folders `it.unibo.frontend/nodeCode/frontend`, `VirtualRobotJS/WebGLScene` and `VirtualRobotJS/server` by using, in each of these, the following command
+Install all packages required by Node.js in the folders `it.unibo.frontend/nodeCode/frontend`, `VirtualRobotJS/WebGLScene` and `VirtualRobotJS/server` by using, in each of these, the following command:
 
 ```bash
 npm install
 ```
 
 ### Xcode configuration
-Frameworks required to work with MQTT are available via CocoaPods, after install CocoaPods itself, download them by executing in the `iss2018` folder the following command
+Frameworks required to work with MQTT are available via CocoaPods, after install CocoaPods itself, download them by executing in the `iss2018` folder the following command:
 
 ```bash
 pod install
