@@ -1,7 +1,6 @@
-# Robot Cleaner
+# Robot Cleaner – AI logic for a smart robot cleaner
 
-
-Final task for course "Software Systems Engineering M" during my master's degree at University of Bologna, carried out together with my colleague Marco Boschi.
+AI logic for a smart robot cleaner. Final task for course "Software Systems Engineering M" during my master's degree at University of Bologna, carried out together with my colleague Marco Boschi.
 
 (A.Y. 2017-2018)
 
