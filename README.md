@@ -1,6 +1,6 @@
-# Robot Cleaner – A.I. logic for a smart robot cleaner
+# Robotic Cleaner – AI software for a smart robotic cleaner
 
-A.I. logic for a smart robot cleaner. Final task for course "Software Systems Engineering" during my master's degree at University of Bologna, carried out together with my colleague Marco Boschi using the agile development framework SCRUM.
+Final task for course "Software Systems Engineering" during my master's degree at University of Bologna, carried out together with my colleague Marco Boschi using the agile development framework SCRUM.
 
 (A.Y. 2017-2018)
 
