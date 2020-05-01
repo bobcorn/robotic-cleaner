@@ -1,4 +1,4 @@
-# Robotic Cleaner – AI software for a smart robotic cleaner
+# Robotic Cleaner – AI control logic for a smart robotic cleaner
 
 Final task for course "Software Systems Engineering" during my master's degree at University of Bologna, carried out together with my colleague Marco Boschi using the agile development framework SCRUM.
 
